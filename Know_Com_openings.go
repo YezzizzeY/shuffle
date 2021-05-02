@@ -2,6 +2,7 @@ package shuffle
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"math/big"
 )
@@ -43,9 +44,23 @@ func KCO_proof(com Common, x_array []*big.Int, r_array []*big.Int) KCO {
 	c_array := []ECPoint{c0}
 	c_array = append(c_array,C_array...)
 
-	//TODO: e should be hash()
-	e, err := rand.Int(rand.Reader, EC.N)
-	check(err)
+	//TODO: e should be modified
+	GHString := com.g1.X.String()+com.g1.Y.String()+com.g2.X.String()+com.g2.Y.String()
+	var xString string
+	for i:=0;i<=m;i++{
+		xString = xString + x1_array[i].String()
+	}
+	var rString string
+	for i:=0;i<=m;i++{
+		rString = rString + r1_array[i].String()
+	}
+	var cString string
+	for i:=0;i<=m;i++{
+		cString = cString + c_array[i].X.String() + c_array[i].Y.String()
+	}
+	c := sha256.Sum256([]byte(GHString+xString+rString+cString))
+	intc := new(big.Int).SetBytes(c[:])
+	e := intc
 
 	z_array := []*big.Int{}
 	for i:=0;i<=m;i++{

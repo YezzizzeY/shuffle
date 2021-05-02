@@ -2,6 +2,7 @@ package shuffle
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"math/big"
 )
@@ -54,9 +55,15 @@ func Shuffle(com Common, m int, C_array []ECPoint, pi []int, rou_array []*big.In
 		CA_array = append(CA_array, Com(com, a_array[i], r_array[i]))
 	}
 
-	//TODO: challenge x should be Hash()
-	x, err := rand.Int(rand.Reader, EC.N)
-	check(err)
+	//TODO: challenge x is supposed to be modified
+	var CAString string
+	for i:=0;i<m;i++{
+		CAString = CAString + CA_array[i].X.String() + CA_array[i].Y.String()
+	}
+	GHString := com.g1.X.String()+com.g1.Y.String()+com.g2.X.String()+com.g2.Y.String()
+	c := sha256.Sum256([]byte(CAString+GHString))
+	intc := new(big.Int).SetBytes(c[:])
+	x := intc
 
 	// initiate vector s
 	s_array := []*big.Int{}
@@ -84,12 +91,15 @@ func Shuffle(com Common, m int, C_array []ECPoint, pi []int, rou_array []*big.In
 		CB_array = append(CB_array, Com(com, b_array[i], s_array[i]))
 	}
 
-	// TODO: challenges y,z should be hash()
-	y, err := rand.Int(rand.Reader, EC.N)
-	check(err)
-	z, err := rand.Int(rand.Reader, EC.N)
-	check(err)
-
+	// TODO: challenges y,z should be modified
+	var CBString string
+	for i:=0;i<m;i++{
+		CBString = CBString + CB_array[i].X.String() + CB_array[i].Y.String()
+	}
+	y_s := sha256.Sum256([]byte(CAString+CBString+GHString))
+	z_S := sha256.Sum256([]byte(CAString+CBString+GHString))
+	y := new(big.Int).SetBytes(y_s[:])
+	z := new(big.Int).SetBytes(z_S[:])
 	// z_array
 	z_array := []*big.Int{}
 	for i:=0;i<m;i++{

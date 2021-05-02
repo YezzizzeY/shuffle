@@ -2,6 +2,7 @@ package shuffle
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"math/big"
 )
@@ -32,8 +33,16 @@ func Product(com Common, X ECPoint,x *big.Int, rx *big.Int, Y ECPoint, y *big.In
 	derta := Com(Common{X,com.g2}, b3, b5)
 
 	//TODO: challenge c shuold be hash()
-	c, err := rand.Int(rand.Reader, EC.N)
-	check(err)
+	GHString := com.g1.X.String()+com.g1.Y.String()+com.g2.X.String()+com.g2.Y.String()
+	bString := b1.String()+b2.String()+b3.String()+b4.String()+b5.String()
+	cString := ""
+	Com_array := []ECPoint{arefa, beita, derta}
+	for i:=0;i<3;i++{
+		cString = cString + Com_array[i].X.String() + Com_array[i].Y.String()
+	}
+	w := sha256.Sum256([]byte(GHString+bString+cString))
+	intw := new(big.Int).SetBytes(w[:])
+	c := intw
 
 	// calculate z1...z5
 	z1 := new(big.Int).Add(b1, new(big.Int).Mul(c,x))

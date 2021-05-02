@@ -2,6 +2,7 @@ package shuffle
 
 import (
 	"crypto/rand"
+	"crypto/sha256"
 	"fmt"
 	"math/big"
 )
@@ -162,9 +163,15 @@ func Multi_exp(m int, st Statement, a_array []*big.Int, r_array []*big.Int, rou 
 	}
 
 	// ----------------------------- select challenge x, step2----------------------------------------------------
-	//TODO this place, x should be Hash(...)
-	x, err := rand.Int(rand.Reader, EC.N)
-	check(err)
+	//TODO this place, x should be midified
+	var EkString string
+	for i:=0;i<=2*m-1;i++{
+		EkString = EkString + Ek_array[i].X.String() + Ek_array[i].Y.String()
+	}
+	GHString := com.g1.X.String()+com.g1.Y.String()+com.g2.X.String()+com.g2.Y.String()
+	c := sha256.Sum256([]byte(EkString+GHString))
+	intc := new(big.Int).SetBytes(c[:])
+	x := intc
 
 	// x_array: index from 0, total m, x^1 - x^m
 	X_array := []*big.Int{}
